@@ -25,7 +25,7 @@ def prep_date(data):
 
 
 def clean_data(data):
-    data = data[(data.price > 0) & (data.rooms != -2) & (data.area > 0) & (data.kitchen_area > 0)]
+    data = data[(data.price > 0) & (data.area > 0) & (data.kitchen_area > 0)]
     data = data.drop_duplicates()
     data.reset_index(inplace=True, drop=True)
     return data
@@ -33,11 +33,7 @@ def clean_data(data):
 
 def drop_regions(data, amount_of_regions):
     regions_to_drop = data.groupby('region')['region'].count().sort_values().head(amount_of_regions).index.to_list()
-    rows_to_drop = np.array([])
-    for region in tqdm(regions_to_drop):
-        rows_to_drop = np.append(rows_to_drop, np.where(data.region == region)[0])
-    data.drop(rows_to_drop, axis=0, inplace=True)
-    data.reset_index(inplace=True, drop=True)
+    data = data[~data['region'].isin(regions_to_drop)]
     return data
 
 
@@ -64,7 +60,14 @@ def convert_object_type(data):
     return data
 
 
+def make_time_features(data):
+    data["hour"] = data['date_time'].apply(lambda x: x.hour)
+    data["year"] = data["date_time"].apply(lambda x: x.year)
+    return data
+
+
 def split_data(data, train_size):
+    data = data.sort_values(by="date_time")
     train_df = data.iloc[:round(data.shape[0] * train_size)]
     test_df = data.iloc[round(data.shape[0] * train_size):]
     return train_df, test_df
@@ -117,7 +120,9 @@ if __name__ == "__main__":
     df = drop_regions(df, n_regions)
     df = filter_by_region(df, n_std, "price")
     df = filter_by_region(df, n_std, "area")
+    df = make_time_features(df)
     df = convert_object_type(df)
+
 
     train, test = split_data(df, config['preprocessing']['train_size'])
     # train = reduce_mem_usage(train)

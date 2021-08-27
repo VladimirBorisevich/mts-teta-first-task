@@ -4,6 +4,14 @@ import numpy as np
 import datetime
 import joblib
 
+def add_feature(data):
+    def calc_mean_room_area(data):
+        return (data['area'] - data['kitchen_area']) / (abs(data['rooms']))
+
+    data['mean_room_area'] = calc_mean_room_area(data)
+    data['percent_of_kitchen_area'] = data['kitchen_area'] / data['area']
+    data['percent_of_level'] = data['level'] / data['levels']
+    return data
 
 class RobustScaler():
     def __init__(self):
@@ -23,7 +31,7 @@ class CatBoostRegressor():
 
 class LightGBM():
     def __init__(self):
-        self.model = joblib.load('light_model.pkl')
+        self.model = joblib.load('lgbm.pkl')
 
     def predict_price(self, data):
         return self.model.predict(data)
@@ -90,19 +98,22 @@ df_with_coordinates = pd.merge(df, coordinates.loc[coordinates.state == a][['geo
 now = datetime.datetime.now()
 first_date = datetime.datetime(2018, 2, 19)
 df_with_coordinates['day_delta'] = (now - first_date).days
-
+df_with_coordinates['hour'] = now.hour
+df_with_coordinates['year'] = now.year
+df_with_coordinates = add_feature(df_with_coordinates)
 # Нормализуем числовые признаки
-nums = df_with_coordinates.drop(['object_type', 'building_type'], axis=1)
-scaler = RobustScaler()
-scaled_nums = pd.DataFrame(scaler.get_scaled_data(nums))
+#nums = df_with_coordinates.drop(['object_type', 'building_type'], axis=1)
+#scaler = RobustScaler()
+#scaled_nums = pd.DataFrame(scaler.get_scaled_data(nums))
 
-ready_df = pd.concat([scaled_nums, df_with_coordinates['object_type'], df_with_coordinates['building_type']], axis=1)
+#ready_df = pd.concat([scaled_nums, df_with_coordinates['object_type'], df_with_coordinates['building_type']], axis=1)
 
 model = LightGBM()
-prediction = model.predict_price(ready_df)
+prediction = model.predict_price(df_with_coordinates)
 
 if st.button('Узнать рекомендованную стоимость'):
     # st.markdown('**Рекомендованная цена квартиры**')
-    st.subheader(np.round(np.exp(prediction[0])))
+    #st.subheader(np.round(np.exp(prediction[0])))
+    st.subheader(prediction[0])
 else:
     st.write('Нажмите на кнопку, чтобы рассчитать стоимость!')

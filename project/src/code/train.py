@@ -8,6 +8,17 @@ from sklearn.ensemble import RandomForestRegressor
 import catboost as cat
 import lightgbm as lgbm
 from project.src.code.prep import read_yaml, read_data
+import pickle
+
+
+def add_feature(data):
+    def calc_mean_room_area(data):
+        return (data['area'] - data['kitchen_area']) / (abs(data['rooms']))
+
+    data['mean_room_area'] = calc_mean_room_area(data)
+    data['percent_of_kitchen_area'] = data['kitchen_area'] / data['area']
+    data['percent_of_level'] = data['level'] / data['levels']
+    return data
 
 
 def linear(X, y, test, exp_id, run_name):
@@ -45,6 +56,43 @@ def catboost():
     pass
 
 
+def train_light(X_train, y_train, X_test, y_test):
+    params = {'bagging_fraction': 0.9615087447098526,
+              'bagging_freq': 0,
+              'boosting_type': 'gbdt',
+              'colsample_bytree': None,
+              'feature_fraction': 0.8456892704201968,
+              'lambda_l1': 0.24842029273784616,
+              'lambda_l2': 0.10134215415038501,
+              'learning_rate': 0.08006161308805573,
+              'metric': 'mae',
+              'min_child_samples': None,
+              'min_child_weight': 0.007497551098352097,
+              'min_data_in_leaf': 150,
+              'min_sum_hessian_in_leaf': None,
+              'num_leaves': 152,
+              'objective': 'regression',
+              'seed': 42,
+              'subsample_for_bin': 3500,
+              'verbose': -1,
+              'n_estimators': 5000}
+    train_dataset = lgbm.Dataset(X_train, y_train,
+                                 categorical_feature=['building_type', 'object_type', 'year'])
+    test_dataset = lgbm.Dataset(X_test, y_test,
+                                categorical_feature=['building_type', 'object_type', 'year'])
+    model = lgbm.train(params=params,
+                       train_set=train_dataset,
+                       valid_sets=[train_dataset, test_dataset],
+                       num_boost_round=20000,
+                       early_stopping_rounds=50,
+                       verbose_eval=100)
+    print(mean_absolute_error(model.predict(X_test), y_test),
+          r2_score(model.predict(X_test), y_test))
+    print(X_train.columns)
+    with open("main/lgbm.pkl", 'wb') as file:
+        pickle.dump(model, file)
+
+
 if __name__ == "__main__":
     config = read_yaml("config.yml")
     project_path = config["project_path"]
@@ -60,9 +108,12 @@ if __name__ == "__main__":
 
     train = read_data(os.path.join(project_path, *["data", "clean", "train_40_3.csv"]))
     test = read_data(os.path.join(project_path, *["data", "clean", "test_40_3.csv"]))
-    train = train.drop("date_time", axis=1)
-    test = test.drop("date_time", axis=1)
+    train = train.drop(["date_time", "region"], axis=1)
+    test = test.drop(["date_time", "region"], axis=1)
+    train = add_feature(train)
+    test = add_feature(test)
     y = train.price
-    X = train.drop("price", axis=1)
+    X = train.drop(["price"], axis=1)
 
-    linear(X, y, test, exp_id, "first try")
+    # linear(X, y, test, exp_id, "first try")
+    train_light(X, y, test.drop("price", axis=1), test.price)
