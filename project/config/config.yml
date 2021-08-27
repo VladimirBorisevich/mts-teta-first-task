@@ -1,0 +1,38 @@
+project:
+  project_path: "/Users/borisevich.vd/mts-teta-first-task/project"
+  preprocessing:
+    dir_clean: "clean"
+    amount_of_regions: 40
+    amount_of_std: 3
+    train_size: 0.7
+    dir_preprocessed: "preprocessed"
+    scaler: "standart"
+  train:
+    experiment_name:
+    model:
+      linear:
+        run_name:
+        params:
+          random_state: 123
+          normalize: "True"
+      tree:
+        run_name:
+        params:
+          random_state: 123
+      forest:
+        run_name:
+        params:
+          random_state: 123
+      lgbm:
+        run_name:
+        params:
+          random_state: 123
+      catboost:
+        run_name:
+        params:
+          random_state: 123
+
+
+
+  
+

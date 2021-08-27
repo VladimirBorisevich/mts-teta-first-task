@@ -1,0 +1,11 @@
+pandas==
+numpy==
+matplotlib==
+seaborn==
+pyyaml==
+tqdm==
+mlflow==
+scikit-learn==
+lightgbm==
+catboost==
+sqlite==
