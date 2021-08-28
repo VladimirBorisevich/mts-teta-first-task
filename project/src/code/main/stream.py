@@ -1,43 +1,48 @@
 import streamlit as st
 import pandas as pd
+import os
 import numpy as np
 import datetime
 import joblib
+import yaml
+
+
+def read_yaml(path, levels):
+    if levels <= 0:
+        return yaml.safe_load(open(os.path.join(path, "config.yml")))['project']
+    return read_yaml(os.path.dirname(path), levels - 1)
+
 
 def add_feature(data):
-    def calc_mean_room_area(data):
+    def calc_mean_room_area():
         return (data['area'] - data['kitchen_area']) / (abs(data['rooms']))
 
-    data['mean_room_area'] = calc_mean_room_area(data)
+    data['mean_room_area'] = calc_mean_room_area()
     data['percent_of_kitchen_area'] = data['kitchen_area'] / data['area']
     data['percent_of_level'] = data['level'] / data['levels']
     return data
 
-class RobustScaler():
-    def __init__(self):
-        self.scaler = joblib.load('scaler.pkl')
 
-    def get_scaled_data(self, nums):
-        return self.scaler.transform(nums)
+class Scaler():
+    def __init__(self, scaler_name):
+        self.scaler = joblib.load(
+            os.path.join(os.path.dirname(os.getcwd()), *["scalers", scaler_name + ".pkl"]))
 
-
-class CatBoostRegressor():
-    def __init__(self):
-        self.model = joblib.load('cat_model.pkl')
-
-    def predict_price(self, data):
-        return self.model.predict(data)
+    def get_scaled_data(self, data):
+        return self.scaler.transform(data)
 
 
-class LightGBM():
-    def __init__(self):
-        self.model = joblib.load('lgbm.pkl')
+class Regressor():
+    def __init__(self, algo_name):
+        self.model = joblib.load(os.path.join(os.path.dirname(os.getcwd()), *["models", algo_name + ".pkl"]))
 
     def predict_price(self, data):
         return self.model.predict(data)
 
 
-coordinates = pd.read_csv('coordinates.csv')
+# coordinates = pd.read_csv('coordinates.csv')
+cities = pd.read_csv("cities.csv")
+config = read_yaml(os.getcwd(), 3)
 
 st.title('Демо-версия сервиса по оценке квартир')
 st.markdown('**Это демонстрационный вариант**')
@@ -65,12 +70,13 @@ else:
 st.sidebar.markdown('Выберите вид жилья')
 select_object_type = st.sidebar.radio('', ('Вторичное жилье', 'Новостройка'))
 if select_object_type == 'Вторичное жилье':
-    g = 1
+    g = 0
 if select_object_type == 'Новостройка':
-    g = 2
+    g = 1
 
 select_building_type = st.sidebar.selectbox('Выберите тип дома',
-                                            ('Панельный', 'Монолитый', 'Кирпичный', 'Бетонный', 'Деревянный', 'Другое'))
+                                            ('Панельный', 'Монолитый', 'Кирпичный', 'Бетонный', 'Деревянный',
+                                             'Другое'))
 if select_building_type == 'Панельный':
     h = 1
 if select_building_type == 'Монолитый':
@@ -84,15 +90,16 @@ if select_building_type == 'Деревянный':
 if select_building_type == 'Другое':
     h = 0
 
-data = {'state': str(a), 'area': int(b), 'rooms': int(c), 'level': int(d), 'levels': int(e), 'kitchen_area': int(f),
+df = {'city': str(a), 'area': int(b), 'rooms': int(c), 'level': int(d), 'levels': int(e), 'kitchen_area': int(f),
         'object_type': int(g), 'building_type': int(h)}
-df = pd.DataFrame(data,
-                  columns=['state', 'area', 'rooms', 'level', 'levels', 'kitchen_area', 'object_type', 'building_type'],
+df = pd.DataFrame(df,
+                  columns=['city', 'area', 'rooms', 'level', 'levels', 'kitchen_area', 'object_type',
+                           'building_type'],
                   index=[0])
 
 # Добавляем координаты по субъекту
-df_with_coordinates = pd.merge(df, coordinates.loc[coordinates.state == a][['geo_lat', 'geo_lon', 'state']],
-                               on='state').drop('state', axis=1)
+df_with_coordinates = pd.merge(df, cities.loc[cities.city == a][['geo_lat', 'geo_lon', 'city']],
+                               on='city').drop('city', axis=1)
 
 # Добавляем временной признак
 now = datetime.datetime.now()
@@ -102,18 +109,19 @@ df_with_coordinates['hour'] = now.hour
 df_with_coordinates['year'] = now.year
 df_with_coordinates = add_feature(df_with_coordinates)
 # Нормализуем числовые признаки
-#nums = df_with_coordinates.drop(['object_type', 'building_type'], axis=1)
-#scaler = RobustScaler()
-#scaled_nums = pd.DataFrame(scaler.get_scaled_data(nums))
+# nums = df_with_coordinates.drop(['object_type', 'building_type'], axis=1)
+scaler = Scaler(config["stream"]["scaler_name"])
+scaled_data = scaler.get_scaled_data(df_with_coordinates)
 
-#ready_df = pd.concat([scaled_nums, df_with_coordinates['object_type'], df_with_coordinates['building_type']], axis=1)
+# ready_df = pd.concat([scaled_nums, df_with_coordinates['object_type'], df_with_coordinates['building_type']], axis=1)
 
-model = LightGBM()
-prediction = model.predict_price(df_with_coordinates)
+model = Regressor(config["stream"]["algo_name"])
+prediction = model.predict_price(scaled_data)
+
 
 if st.button('Узнать рекомендованную стоимость'):
     # st.markdown('**Рекомендованная цена квартиры**')
     #st.subheader(np.round(np.exp(prediction[0])))
-    st.subheader(prediction[0])
+    st.subheader(np.round(prediction[0]))
 else:
     st.write('Нажмите на кнопку, чтобы рассчитать стоимость!')

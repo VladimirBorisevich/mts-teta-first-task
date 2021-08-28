@@ -11,16 +11,6 @@ from project.src.code.prep import read_yaml, read_data
 import pickle
 
 
-def add_feature(data):
-    def calc_mean_room_area(data):
-        return (data['area'] - data['kitchen_area']) / (abs(data['rooms']))
-
-    data['mean_room_area'] = calc_mean_room_area(data)
-    data['percent_of_kitchen_area'] = data['kitchen_area'] / data['area']
-    data['percent_of_level'] = data['level'] / data['levels']
-    return data
-
-
 def linear(X, y, test, exp_id, run_name):
     run_id = mlflow.start_run(
         experiment_id=exp_id.experiment_id,
@@ -56,7 +46,9 @@ def catboost():
     pass
 
 
-def train_light(X_train, y_train, X_test, y_test):
+def train_light(X_train, y_train, X_test, y_test, scaler_name):
+    with open(f"scalers/{scaler_name}.pkl", 'rb') as file:
+        scaler = pickle.load(file)
     params = {'bagging_fraction': 0.9615087447098526,
               'bagging_freq': 0,
               'boosting_type': 'gbdt',
@@ -72,24 +64,23 @@ def train_light(X_train, y_train, X_test, y_test):
               'min_sum_hessian_in_leaf': None,
               'num_leaves': 152,
               'objective': 'regression',
-              'seed': 42,
+              'seed': 123,
               'subsample_for_bin': 3500,
               'verbose': -1,
               'n_estimators': 5000}
+    X_train = pd.DataFrame(scaler.transform(X_train), columns=X_train.columns)
+    X_test = pd.DataFrame(scaler.transform(X_test), columns=X_train.columns)
     train_dataset = lgbm.Dataset(X_train, y_train,
-                                 categorical_feature=['building_type', 'object_type', 'year'])
+                                 categorical_feature=['building_type', 'object_type', 'year', 'hour'])
     test_dataset = lgbm.Dataset(X_test, y_test,
-                                categorical_feature=['building_type', 'object_type', 'year'])
+                                categorical_feature=['building_type', 'object_type', 'year', 'hour'])
     model = lgbm.train(params=params,
                        train_set=train_dataset,
                        valid_sets=[train_dataset, test_dataset],
                        num_boost_round=20000,
                        early_stopping_rounds=50,
                        verbose_eval=100)
-    print(mean_absolute_error(model.predict(X_test), y_test),
-          r2_score(model.predict(X_test), y_test))
-    print(X_train.columns)
-    with open("main/lgbm.pkl", 'wb') as file:
+    with open("models/lgbm.pkl", 'wb') as file:
         pickle.dump(model, file)
 
 
@@ -110,10 +101,8 @@ if __name__ == "__main__":
     test = read_data(os.path.join(project_path, *["data", "clean", "test_40_3.csv"]))
     train = train.drop(["date_time", "region"], axis=1)
     test = test.drop(["date_time", "region"], axis=1)
-    train = add_feature(train)
-    test = add_feature(test)
     y = train.price
     X = train.drop(["price"], axis=1)
 
     # linear(X, y, test, exp_id, "first try")
-    train_light(X, y, test.drop("price", axis=1), test.price)
+    train_light(X, y, test.drop("price", axis=1), test.price, config["stream"]["scaler_name"])

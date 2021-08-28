@@ -1,13 +1,15 @@
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
+import pickle
+from sklearn.preprocessing import StandardScaler, RobustScaler
 import os
 import yaml
 
 
 def read_yaml(path):
     dir_path = os.path.dirname(os.path.dirname(os.getcwd()))
-    dir_path = os.path.join(dir_path, 'config')
+    # dir_path = os.path.join(dir_path, 'config')
     return yaml.safe_load(open(os.path.join(dir_path, path)))['project']
 
 
@@ -25,7 +27,7 @@ def prep_date(data):
 
 
 def clean_data(data):
-    data = data[(data.price > 0) & (data.area > 0) & (data.kitchen_area > 0)]
+    data = data[(data.price > 0) & (data.rooms > 0) & (data.area > 0) & (data.kitchen_area > 0)]
     data = data.drop_duplicates()
     data.reset_index(inplace=True, drop=True)
     return data
@@ -63,6 +65,16 @@ def convert_object_type(data):
 def make_time_features(data):
     data["hour"] = data['date_time'].apply(lambda x: x.hour)
     data["year"] = data["date_time"].apply(lambda x: x.year)
+    return data
+
+
+def add_feature(data):
+    def calc_mean_room_area(data):
+        return (data['area'] - data['kitchen_area']) / (abs(data['rooms']))
+
+    data['mean_room_area'] = calc_mean_room_area(data)
+    data['percent_of_kitchen_area'] = data['kitchen_area'] / data['area']
+    data['percent_of_level'] = data['level'] / data['levels']
     return data
 
 
@@ -104,6 +116,20 @@ def reduce_mem_usage(data, verbose=True):
     return data
 
 
+def scale_data(X, scaler_algo, path):
+    if scaler_algo == "standart":
+        scaler = StandardScaler()
+        scaler.fit(X)
+    elif scaler_algo == "robust":
+        scaler = RobustScaler()
+        scaler.fit(X)
+    else:
+        print("enter scaler name")
+
+    with open(path, "wb") as file:
+        pickle.dump(scaler, file)
+
+
 def save_data(data, path):
     data.to_csv(path, index=False)
 
@@ -113,6 +139,7 @@ if __name__ == "__main__":
     project_path = config["project_path"]
     n_regions = config['preprocessing']['amount_of_regions']
     n_std = config['preprocessing']['amount_of_std']
+    scaler = config['preprocessing']["scaler"]
 
     df = read_data(os.path.join(project_path, *["data", "raw", "all_v2.csv"]))
     df = prep_date(df)
@@ -121,8 +148,8 @@ if __name__ == "__main__":
     df = filter_by_region(df, n_std, "price")
     df = filter_by_region(df, n_std, "area")
     df = make_time_features(df)
+    df = add_feature(df)
     df = convert_object_type(df)
-
 
     train, test = split_data(df, config['preprocessing']['train_size'])
     # train = reduce_mem_usage(train)
@@ -130,3 +157,6 @@ if __name__ == "__main__":
 
     save_data(train, os.path.join(project_path, *["data", "clean", f"train_{n_regions}_{n_std}.csv"]))
     save_data(test, os.path.join(project_path, *["data", "clean", f"test_{n_regions}_{n_std}.csv"]))
+
+    scale_data(train.drop(["price", "date_time", 'region'], axis=1), scaler,
+               f"scalers/{scaler}_{n_regions}_{n_std}.pkl")
