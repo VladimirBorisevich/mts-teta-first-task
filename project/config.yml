@@ -1,0 +1,38 @@
+project:
+  project_path: "/Users/borisevich.vd/mts-teta-first-task/project"
+  stream:
+    scaler_name: "standart_40_3"
+    algo_name: "lgbm"
+  preprocessing:
+    dir_clean: "clean"
+    amount_of_regions: 40
+    amount_of_std: 3
+    train_size: 0.7
+    dir_preprocessed: "preprocessed"
+    scaler: "standart"
+  train:
+    experiment_name:
+    algorithm: "linear"
+    run_name: "test"
+    model:
+      linear:
+        params:
+          random_state: 123
+          normalize: "True"
+      tree:
+        params:
+          random_state: 123
+      forest:
+        params:
+          random_state: 123
+      lgbm:
+        params:
+          random_state: 123
+      catboost:
+        params:
+          random_state: 123
+
+
+
+  
+
