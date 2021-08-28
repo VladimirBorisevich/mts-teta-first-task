@@ -1,5 +1,5 @@
 project:
-  project_path: "/Users/borisevich.vd/mts-teta-first-task/project"
+  project_path: "."
   stream:
     scaler_name: "standart_40_3"
     algo_name: "lgbm"
