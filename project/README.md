@@ -28,4 +28,4 @@ $ cd mts-teta-first-task
 
 Подбор параметров с использованием Hyperopt
 
-Валидация модели
+Валидация модели [validation.ipynb]
