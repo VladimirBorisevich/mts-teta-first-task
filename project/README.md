@@ -22,7 +22,7 @@ $ cd mts-teta-first-task
 2. viz1.png - анализ распределений некоторых признаков
 3. viz2.png - анализ средних цен по некоторым регионам
 
-Бейзлайн: [baseline.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/baseline.ipynb)
+Бейзлайн: [baseline.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/baseline.ipynb)
 
 Оценка экономического эффекта: [economical_effect.pdf](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/docs/economical_effect.pdf)
 
