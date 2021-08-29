@@ -26,6 +26,6 @@ $ cd mts-teta-first-task
 
 Оценка экономического эффекта: [economical_effect.pdf](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/economical_effect.pdf)
 
-Подбор параметров с использованием Hyperopt [parametrs_by_hyperopt.ipynb] (https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/parametrs_by_hyperopt.ipynb)
+Подбор параметров с использованием Hyperopt [parametrs_by_hyperopt.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/parametrs_by_hyperopt.ipynb)
 
-Валидация модели [validation.ipynb] (https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/validation.ipynb) 
+Валидация модели [validation.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/validation.ipynb) 
