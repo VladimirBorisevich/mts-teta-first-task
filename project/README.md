@@ -13,7 +13,7 @@ $ cd mts-teta-first-task
 
 ### [Датасет](https://www.kaggle.com/mrdaniilak/russia-real-estate-20182021)
 
-Постановка задач: [tasks.pdf](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/tasks.pdf)
+Постановка задач: [tasks.pdf](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/docs/tasks.pdf)
 
 Валидация данных и EDA: [EDA.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/EDA.ipynb)
 
