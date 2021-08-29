@@ -15,7 +15,7 @@ $ cd mts-teta-first-task
 
 Постановка задач: [tasks.pdf](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/docs/tasks.pdf)
 
-Валидация данных и EDA: [EDA.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/EDA.ipynb)
+Валидация данных и EDA: [EDA.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/Eda/EDA.ipynb)
 
 Дополнительная визуализация:
 1. real_estate.html - результат pandas_profiling датасета
@@ -24,7 +24,7 @@ $ cd mts-teta-first-task
 
 Бейзлайн: [baseline.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/baseline.ipynb)
 
-Оценка экономического эффекта: [economical_effect.pdf](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/economical_effect.pdf)
+Оценка экономического эффекта: [economical_effect.pdf](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/docs/economical_effect.pdf)
 
 Подбор параметров с использованием Hyperopt [parametrs_by_hyperopt.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/parametrs_by_hyperopt.ipynb)
 
