@@ -29,3 +29,7 @@ $ cd mts-teta-first-task
 Подбор параметров с использованием Hyperopt [parametrs_by_hyperopt.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/parametrs_by_hyperopt.ipynb)
 
 Валидация модели [validation.ipynb](https://github.com/VladimirBorisevich/mts-teta-first-task/blob/main/project/validation.ipynb) 
+
+### Демо
+
+https://share.streamlit.io/dinararavilevn/demo/main/stream.py
